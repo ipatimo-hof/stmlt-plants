@@ -1,1 +1,5 @@
-streamlit requests Pillow tensorflow tensorflow-hub
+streamlit
+requests
+Pillow
+tensorflow
+tensorflow-hub
