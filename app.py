@@ -57,19 +57,3 @@ if uploaded_file is not None:
     display_results(image, class_name)
 else:
     st.write("Please upload an image to get started.")    
-
-'''
-
-
-
-
-# Load the image and resize it
-image = Image.open('C:/Users/ptimofeev/Pictures/plants/f2.jpg')
-image = image.resize((224, 224))
-
-
-
-# Find the index of the category with the highest logit value and print it
-index = np.argmax(output)
-print(index)
-'''
