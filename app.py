@@ -14,9 +14,7 @@ from PIL import Image
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 st.write("## Recognize plants in your images")
-st.write(
-    ":seedling: Try uploading an image to see the plant species identified. This code is open source and available [here](https://github.com/tyler-simons/PlantRecognizer) on GitHub. Special thanks to [TensorFlow Hub](https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1) :grin:"
-)
+
 st.sidebar.write("## Upload and recognize :gear:")
 
 # Load the TensorFlow Hub model
