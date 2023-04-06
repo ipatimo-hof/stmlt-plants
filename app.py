@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import io
 from PIL import Image
-import tensorflow.compat.v2 as tf
+import tensorflow as tf
 import tensorflow_hub as hub
 
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
