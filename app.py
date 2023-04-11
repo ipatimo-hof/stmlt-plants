@@ -29,14 +29,15 @@ def predict_plant(image):
     output = m(image)
     predicted_class = tf.argmax(output, axis=1)[0].numpy()
     # Load the class names
-    # Read the csv file with the classifier and get the category names as a list
+    # Read the csv file with the classifier and get the category names as a dictionary
     df = pd.read_csv('classifier.csv')
-    categories = df['name'].tolist()
+    categories = dict(zip(df['id'], df['name']))
 
-    # Get the name of the category from the index and print it
+    # Get the name of the category from the ID and print it
     name = categories[predicted_class]
     # Return the predicted class name
     return name
+
 
 def display_results(image, class_name):
     st.write(f"The plant in the image is a {class_name}.")
