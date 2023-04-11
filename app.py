@@ -18,6 +18,10 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 st.write("## Recognize plants in your images")
 
 st.sidebar.write("## Upload and recognize :gear:")
+@st.cache(allow_output_mutation=True)
+def load_model():
+    return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
+
 
 def predict_plant(image):
     # Convert the image to a numpy array and add a batch dimension
@@ -45,7 +49,8 @@ def display_results(image, class_name):
     st.image(image, width=400)
 
 # Load the TensorFlow Hub model
-m = hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
+
+m = load_model()
 
 uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
