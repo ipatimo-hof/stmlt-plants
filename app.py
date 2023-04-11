@@ -31,7 +31,7 @@ def predict_plant(image):
     # Load the class names
     # Read the csv file with the classifier and get the category names as a list
     df = pd.read_csv('classifier.csv')
-    categories = df['category'].tolist()
+    categories = df['name'].tolist()
 
     # Get the name of the category from the index and print it
     name = categories[predicted_class]
