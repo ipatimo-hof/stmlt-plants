@@ -8,6 +8,7 @@ import tensorflow_hub as hub
 import numpy as np
 from PIL import Image
 from PIL.ExifTags import IFD
+from PIL import ImageOps
 import os
 
 # Set the working directory to the script's directory
@@ -81,6 +82,12 @@ if uploaded_file is not None:
     image = correct_image_orientation(image)
     max_size = (224, 224)
     image.thumbnail(max_size)
+    # Pad the image to the desired size while maintaining aspect ratio
+    width, height = image.size
+    delta_w = max_size[0] - width
+    delta_h = max_size[1] - height
+    padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
+    image = ImageOps.expand(image, padding)
     with st.spinner("Waiting for model inference..."):
         class_name = predict_plant(image)
 
