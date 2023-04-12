@@ -1,39 +1,40 @@
-import streamlit as st
-from PIL import Image
-import base64
-import io
+<!-- camera_input.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    canvas { display:none; }
+  </style>
+</head>
+<body>
+  <video id="video" width="640" height="480" autoplay></video>
+  <button id="snap">Capture</button>
+  <canvas id="canvas" width="640" height="480"></canvas>
 
-st.set_page_config(layout="wide", page_title="Camera Image Capture")
+  <script>
+    // Grab elements, create settings, etc.
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const snap = document.getElementById("snap");
+    const context = canvas.getContext("2d");
+    const constraints = { video: { width: 640, height: 480, facingMode: "user" } };
 
-st.write("## Capture an image with your camera")
+    // Access the device camera and stream to video element
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then((stream) => {
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch((err) => {
+        console.error("An error occurred: " + err);
+      });
 
-with open("camera_input.html", "r") as f:
-    html_template = f.read()
-
-st.write(html_template, unsafe_allow_html=True)
-
-if "image-captured" not in st.session_state:
-    st.session_state.image_captured = None
-
-if st.session_state.image_captured is not None:
-    # Convert the image to PIL Image
-    img_data = base64.b64decode(st.session_state.image_captured.split(",")[1])
-    img = Image.open(io.BytesIO(img_data))
-
-    # Display the captured image
-    st.image(img, caption="Captured Image", use_column_width=True)
-
-# Handle image data received from JavaScript
-st.write(
-    """
-    <script>
-    window.addEventListener("message", (event) => {
-      if (event.data.type === "image-captured") {
-        const img_data = event.data.data;
-        window.Streamlit.setComponentValue("image-captured", img_data);
-      }
-    }, false);
-    </script>
-""",
-    unsafe_allow_html=True,
-)
+    // Trigger photo capture
+    snap.addEventListener("click", () => {
+      context.drawImage(video, 0, 0, 640, 480);
+      const dataURL = canvas.toDataURL("image/png");
+      window.parent.postMessage({type: "image-captured", data: dataURL}, "*");
+    });
+  </script>
+</body>
+</html>
