@@ -79,7 +79,8 @@ uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     image = correct_image_orientation(image)
-    image = image.resize((224, 224))
+    max_size = (224, 224)
+    image.thumbnail(max_size)
     with st.spinner("Waiting for model inference..."):
         class_name = predict_plant(image)
 
