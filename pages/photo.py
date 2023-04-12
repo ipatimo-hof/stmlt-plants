@@ -12,7 +12,7 @@ st.set_page_config(layout="wide", page_title="Camera Image Capture")
 
 st.write("## Capture an image with your camera")
 
-with open("camera_input.html", "r") as f:
+with open(os.path.join(script_dir, "camera_input.html"), "r") as f:
     html_template = f.read()
 
 st.write(html_template, unsafe_allow_html=True)
