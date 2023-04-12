@@ -7,6 +7,7 @@ import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 import numpy as np
 from PIL import Image
+from PIL.ExifTags import IFD
 import os
 
 # Set the working directory to the script's directory
@@ -15,13 +16,28 @@ os.chdir(script_dir)
 
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
-st.write("## Recognize plants in your images")
+st.write("## Recognize plants ")
 
-st.sidebar.write("## Upload and recognize :gear:")
-@st.cache(allow_output_mutation=True)
+st.sidebar.write("## Upload image :gear:")
+
+@st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
+def correct_image_orientation(image):
+    try:
+        exif = image._getexif()
+        orientation = IFD.Orientation.value
+        if exif[orientation] == 3:
+            image = image.rotate(180, expand=True)
+        elif exif[orientation] == 6:
+            image = image.rotate(270, expand=True)
+        elif exif[orientation] == 8:
+            image = image.rotate(90, expand=True)
+    except (AttributeError, KeyError, IndexError):
+        # Cases: image don't have getexif
+        pass
+    return image
 
 def predict_plant(image):
     # Convert the image to a numpy array and add a batch dimension
@@ -56,10 +72,11 @@ uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", 
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
+    image = correct_image_orientation(image)
     image = image.resize((224, 224))
     with st.spinner("Waiting for model inference..."):
         class_name = predict_plant(image)
 
     display_results(image, class_name)
 else:
-    st.write("Please upload an image to get started.")
+    st.write("Please upload an image to get started!")
