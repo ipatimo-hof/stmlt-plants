@@ -30,12 +30,16 @@ def correct_image_orientation(image):
         orientation = IFD.Orientation.value
         if exif[orientation] == 3:
             image = image.rotate(180, expand=True)
+            st.write("Rotation 180")
         elif exif[orientation] == 6:
             image = image.rotate(270, expand=True)
+            st.write("Rotation 270")
         elif exif[orientation] == 8:
             image = image.rotate(90, expand=True)
+            st.write("Rotation 90")
     except (AttributeError, KeyError, IndexError):
         # Cases: image don't have getexif
+        st.write("no EXIF data found")
         pass
     return image
 
