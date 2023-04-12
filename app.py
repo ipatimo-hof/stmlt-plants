@@ -18,8 +18,8 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 st.write("## Recognize plants ")
 
-st.sidebar.write("## Upload image :gear:")
-
+#st.sidebar.write("## Upload image :gear:")
+st.write("## Upload image !:gear:")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
@@ -72,7 +72,8 @@ def display_results(image, class_name):
 
 m = load_model()
 
-uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+#uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
