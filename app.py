@@ -33,6 +33,7 @@ def correct_image_orientation(image):
         if exif is not None:
             orientation = IFD.Orientation.value
             if orientation in exif:
+                st.write(f"EXIF Orientation Value: {exif[orientation]}")
                 if exif[orientation] == 3:
                     image = image.rotate(180, expand=True)
                     st.write("Rotation 180")
@@ -49,6 +50,7 @@ def correct_image_orientation(image):
         # Cases: image don't have getexif
         pass
     return image
+
 
 
 def predict_plant(image):
