@@ -48,8 +48,10 @@ def correct_image_orientation(image):
             image = image.rotate(270, expand=True)
     except (AttributeError, KeyError, IndexError):
         # Cases: image don't have getexif
+        st.write("EXIF extraction failed")
         pass
     return image
+
 
 
 
