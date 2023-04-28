@@ -20,26 +20,31 @@ st.set_page_config(layout="wide", page_title="Plant Recognizerv")
 st.write("## Recognize plants ")
 
 #st.sidebar.write("## Upload image :gear:")
-st.write("## Upload image !:gear:0.13")
+st.write("## Upload image !:gear:0.14")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
-from PIL.ExifTags import IFD
+from PIL.ExifTags import TAGS
+
 def correct_image_orientation(image):
     try:
         exif = image.getexif()
         if exif is not None:
-            orientation = IFD.Orientation.value
-            if orientation in exif:
-                st.write(f"EXIF Orientation Value: {exif[orientation]}")
-                if exif[orientation] == 3:
+            orientation_key = None
+            for key, value in TAGS.items():
+                if value == 'Orientation':
+                    orientation_key = key
+                    break
+            if orientation_key and orientation_key in exif:
+                st.write(f"EXIF Orientation Value: {exif[orientation_key]}")
+                if exif[orientation_key] == 3:
                     image = image.rotate(180, expand=True)
                     st.write("Rotation 180")
-                elif exif[orientation] == 6:
+                elif exif[orientation_key] == 6:
                     image = image.rotate(270, expand=True)
                     st.write("Rotation 270")
-                elif exif[orientation] == 8:
+                elif exif[orientation_key] == 8:
                     image = image.rotate(90, expand=True)
                     st.write("Rotation 90")
             else:
