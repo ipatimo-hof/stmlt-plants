@@ -15,7 +15,7 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
-st.set_page_config(layout="wide", page_title="Plant Recognizer")
+st.set_page_config(layout="wide", page_title="Plant Recognizerv0.11")
 
 st.write("## Recognize plants ")
 
