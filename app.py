@@ -15,12 +15,12 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
-st.set_page_config(layout="wide", page_title="Plant Recognizerv0.11")
+st.set_page_config(layout="wide", page_title="Plant Recognizerv")
 
 st.write("## Recognize plants ")
 
 #st.sidebar.write("## Upload image :gear:")
-st.write("## Upload image !:gear:")
+st.write("## Upload image !:gear:0.11")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
