@@ -1,40 +1,33 @@
-<!-- camera_input.html -->
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    canvas { display:none; }
-  </style>
-</head>
-<body>
+<div>
   <video id="video" width="640" height="480" autoplay></video>
-  <button id="snap">Capture</button>
+  <button id="snap">Snap Photo</button>
   <canvas id="canvas" width="640" height="480"></canvas>
+</div>
 
-  <script>
-    // Grab elements, create settings, etc.
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const snap = document.getElementById("snap");
-    const context = canvas.getContext("2d");
-    const constraints = { video: { width: 640, height: 480, facingMode: "user" } };
+<script>
+  // Grab elements, create settings, etc.
+  var video = document.getElementById('video');
 
-    // Access the device camera and stream to video element
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then((stream) => {
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((err) => {
-        console.error("An error occurred: " + err);
-      });
-
-    // Trigger photo capture
-    snap.addEventListener("click", () => {
-      context.drawImage(video, 0, 0, 640, 480);
-      const dataURL = canvas.toDataURL("image/png");
-      window.parent.postMessage({type: "image-captured", data: dataURL}, "*");
+  // Get access to the camera
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // Not adding `{ audio: true }` since we only want video now
+    navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+      //video.src = window.URL.createObjectURL(stream);
+      video.srcObject = stream;
+      video.play();
     });
-  </script>
-</body>
-</html>
+  }
+
+  // Elements for taking the snapshot
+  var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
+  var video = document.getElementById('video');
+
+  // Trigger photo take
+  document.getElementById('snap').addEventListener('click', function () {
+    context.drawImage(video, 0, 0, 640, 480);
+    var imgData = canvas.toDataURL('image/png');
+    let pyImage = { key: "image-captured", value: imgData };
+    window.streamlit.setComponentValue(pyImage);
+  });
+</script>

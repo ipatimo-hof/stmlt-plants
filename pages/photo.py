@@ -4,14 +4,11 @@ import base64
 import io
 import os
 
-# Set the working directory to the script's directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
-
 st.set_page_config(layout="wide", page_title="Camera Image Capture")
 
 st.write("## Capture an image with your camera")
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(script_dir, "camera_input.html"), "r") as f:
     html_template = f.read()
 
@@ -29,16 +26,4 @@ if st.session_state.image_captured is not None:
     st.image(img, caption="Captured Image", use_column_width=True)
 
 # Handle image data received from JavaScript
-st.write(
-    """
-    <script>
-    window.addEventListener("message", (event) => {
-      if (event.data.type === "image-captured") {
-        const img_data = event.data.data;
-        window.Streamlit.setComponentValue("image-captured", img_data);
-      }
-    }, false);
-    </script>
-""",
-    unsafe_allow_html=True,
-)
+st.write(" ", unsafe_allow_html=True)
