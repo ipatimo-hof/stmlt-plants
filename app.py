@@ -20,7 +20,7 @@ st.set_page_config(layout="wide", page_title="Plant Recognizerv")
 st.write("## Recognize plants ")
 
 #st.sidebar.write("## Upload image :gear:")
-st.write("## Upload image !:gear:0.12")
+st.write("## Upload image !:gear:0.13")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
@@ -42,12 +42,16 @@ def correct_image_orientation(image):
                 elif exif[orientation] == 8:
                     image = image.rotate(90, expand=True)
                     st.write("Rotation 90")
+            else:
+                st.write("No 'Orientation' tag in EXIF data")
         else:
             st.write("No EXIF data found")
             image = image.rotate(270, expand=True)
-    except (AttributeError, KeyError, IndexError):
-        # Cases: image doesn't have EXIF data
-        st.write("EXIF extraction failed")
+    except (AttributeError, KeyError) as e:
+        st.write(f"EXIF extraction failed with error: {str(e)}")
+        pass
+    except IndexError as e:
+        st.write(f"IndexError during EXIF extraction: {str(e)}")
         pass
     return image
 
