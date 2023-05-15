@@ -15,10 +15,10 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
-st.set_page_config(layout="wide", page_title="Plant Recognizerv")
+st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 
-
+st.image('header.png', width=800)
 #st.sidebar.write("## Upload image :gear:")
 st.write("## Upload image !:gear:0.14")
 @st.cache_resource
