@@ -17,7 +17,7 @@ os.chdir(script_dir)
 
 st.set_page_config(layout="wide", page_title="Plant Recognizerv")
 
-st.write("## Recognize plants ")
+
 
 #st.sidebar.write("## Upload image :gear:")
 st.write("## Upload image !:gear:0.14")
@@ -37,16 +37,16 @@ def correct_image_orientation(image):
                     orientation_key = key
                     break
             if orientation_key and orientation_key in exif:
-                st.write(f"EXIF Orientation Value: {exif[orientation_key]}")
+              #  st.write(f"EXIF Orientation Value: {exif[orientation_key]}")
                 if exif[orientation_key] == 3:
                     image = image.rotate(180, expand=True)
-                    st.write("Rotation 180")
+                  #  st.write("Rotation 180")
                 elif exif[orientation_key] == 6:
                     image = image.rotate(270, expand=True)
-                    st.write("Rotation 270")
+                   # st.write("Rotation 270")
                 elif exif[orientation_key] == 8:
                     image = image.rotate(90, expand=True)
-                    st.write("Rotation 90")
+                   # st.write("Rotation 90")
             else:
                 st.write("No 'Orientation' tag in EXIF data")
         else:
@@ -69,28 +69,32 @@ def predict_plant(image):
     image = tf.cast(image, tf.float32) / 255.0
     # Pass the image to the model and get the output tensor
     output = m(image)
-    predicted_class = tf.argmax(output, axis=1)[0].numpy()
+    # Get the top 3 predictions
+    top_3_predictions = tf.math.top_k(output, k=3)
+    predicted_classes = top_3_predictions.indices.numpy()[0]
+    predicted_probabilities = tf.nn.softmax(top_3_predictions.values).numpy()[0]
     # Load the class names
     # Read the csv file with the classifier and get the category names as a dictionary
     df = pd.read_csv('classifier.csv')
     categories = dict(zip(df['id'], df['name']))
+    # Get the names of the categories from the IDs and probabilities
+    names_and_probabilities = [(categories[pred], prob) for pred, prob in zip(predicted_classes, predicted_probabilities)]
+    # Return the predicted class names and probabilities
+    return names_and_probabilities
 
-    # Get the name of the category from the ID and print it
-    name = categories[predicted_class]
-    # Return the predicted class name
-    return name
 
-
-def display_results(image, class_name):
-    st.write(f"The plant in the image is a {class_name}.")
-    st.write("Uploaded image:")
+def display_results(image, names_and_probabilities):
+    for name, prob in names_and_probabilities:
+        st.write(f"The plant in the image might be a {name} with a probability of {prob*100:.2f}%.")
+        st.markdown(f"[More about {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+    #st.write("Uploaded image:")
     st.image(image, width=400)
 
 # Load the TensorFlow Hub model
 
 m = load_model()
 
-uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Upload an image or make a photo", type=["png", "jpg", "jpeg"])
 #uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
