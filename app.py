@@ -1,4 +1,3 @@
-import streamlit as st
 import requests
 import io
 import pandas as pd
@@ -11,36 +10,6 @@ from PIL.ExifTags import IFD
 from PIL import ImageOps
 import os
 
-def predict_plant(image):
-    # Convert the image to RGB (3 channels)
-    image = image.convert('RGB')
-    
-    # Convert the image to a numpy array and add a batch dimension
-    image = np.array(image)
-    image = np.expand_dims(image, axis=0)
-    
-    # Convert the image to a float tensor and normalize it
-    image = tf.cast(image, tf.float32) / 255.0
-    
-    # Pass the image to the model and get the output tensor
-    output = m(image)
-    
-    # Get the top 3 predictions
-    top_3_predictions = tf.math.top_k(output, k=3)
-    predicted_classes = top_3_predictions.indices.numpy()[0]
-    predicted_probabilities = tf.nn.softmax(top_3_predictions.values).numpy()[0]
-    
-    # Load the class names
-    # Read the csv file with the classifier and get the category names as a dictionary
-    df = pd.read_csv('classifier.csv')
-    categories = dict(zip(df['id'], df['name']))
-    
-    # Get the names of the categories from the IDs and probabilities
-    names_and_probabilities = [(categories[pred], prob) for pred, prob in zip(predicted_classes, predicted_probabilities)]
-    
-    # Return the predicted class names and probabilities
-    return names_and_probabilities
-
 # Set the working directory to the script's directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -49,24 +18,99 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 
 st.image('header.png', use_column_width=True)
-st.write("## Upload image :gear:")
-
-MODEL_URL = 'https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1'
-
+#st.sidebar.write("## Upload image :gear:")
+st.write("## Upload image !:gear:0.14")
 @st.cache_resource
 def load_model():
-    return hub.KerasLayer(MODEL_URL)
+    return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
 from PIL.ExifTags import TAGS
 
-# ... The rest of your code ...
+def correct_image_orientation(image):
+    try:
+        exif = image.getexif()
+        if exif is not None:
+            orientation_key = None
+            for key, value in TAGS.items():
+                if value == 'Orientation':
+                    orientation_key = key
+                    break
+            if orientation_key and orientation_key in exif:
+              #  st.write(f"EXIF Orientation Value: {exif[orientation_key]}")
+                if exif[orientation_key] == 3:
+                    image = image.rotate(180, expand=True)
+                  #  st.write("Rotation 180")
+                elif exif[orientation_key] == 6:
+                    image = image.rotate(270, expand=True)
+                   # st.write("Rotation 270")
+                elif exif[orientation_key] == 8:
+                    image = image.rotate(90, expand=True)
+                   # st.write("Rotation 90")
+            else:
+                st.write("No 'Orientation' tag in EXIF data")
+        else:
+            st.write("No EXIF data found")
+            image = image.rotate(270, expand=True)
+    except (AttributeError, KeyError) as e:
+        st.write(f"EXIF extraction failed with error: {str(e)}")
+        pass
+    except IndexError as e:
+        st.write(f"IndexError during EXIF extraction: {str(e)}")
+        pass
+    return image
+
+
+def predict_plant(image_path):
+    # Load the image
+    image = Image.open(image_path)
+
+    # Convert the image to RGB
+    image = image.convert('RGB')
+
+    # Resize the image to the expected input size
+    image = image.resize((224, 224))
+
+    # Convert the image to a numpy array and add a batch dimension
+    image_np = np.array(image)
+    image_np = np.expand_dims(image_np, axis=0)
+
+    # Convert the image to a float tensor and normalize it
+    image_tensor = tf.convert_to_tensor(image_np, dtype=tf.float32) / 255.0
+
+    # Pass the image to the model and get the output tensor
+    output = m(image_tensor)
+
+    # Get the top 3 predictions
+    top_3_predictions = tf.math.top_k(output, k=3)
+    predicted_classes = top_3_predictions.indices.numpy()[0]
+    predicted_probabilities = tf.nn.softmax(top_3_predictions.values).numpy()[0]
+
+    # Load the class names
+    df = pd.read_csv('classifier.csv')
+    categories = dict(zip(df['id'], df['name']))
+
+    # Get the names of the categories from the IDs and probabilities
+    names_and_probabilities = [(categories[pred], prob) for pred, prob in zip(predicted_classes, predicted_probabilities)]
+
+    # Return the predicted class names and probabilities
+    return names_and_probabilities
+
+
+def display_results(image, names_and_probabilities):
+    for name, prob in names_and_probabilities:
+        st.write(f"The plant in the image might be a {name} with a probability of {prob*100:.2f}%.")
+        st.markdown(f"[More about {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+    #st.write("Uploaded image:")
+    st.image(image, width=400)
+
+# Load the TensorFlow Hub model
+
+m = load_model()
 
 uploaded_file = st.file_uploader("Upload an image or make a photo", type=["png", "jpg", "jpeg"])
+#uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
-    # Load the TensorFlow Hub model
-    m = load_model()
-
     image = Image.open(uploaded_file)
     image = correct_image_orientation(image)
     max_size = (224, 224)
