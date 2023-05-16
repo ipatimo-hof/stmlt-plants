@@ -59,11 +59,7 @@ def correct_image_orientation(image):
         pass
     return image
 
-
-def predict_plant(image_path):
-    # Load the image
-    image = Image.open(image_path)
-
+def predict_plant(image):
     # Convert the image to RGB
     image = image.convert('RGB')
 
