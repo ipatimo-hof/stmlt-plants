@@ -104,7 +104,7 @@ def display_results(image, names_and_probabilities):
 m = load_model()
 
 uploaded_file = st.file_uploader("Upload an image or make a photo", type=["png", "jpg", "jpeg"])
-#uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+#uploaded_file = st.sidebar.file_uploader("Pflanzen Erkennung", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
