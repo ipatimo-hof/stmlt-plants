@@ -121,5 +121,8 @@ if uploaded_file is not None:
         class_name = predict_plant(image)
 
     display_results(image, class_name)
+    st.write("These results are not suitable for determining whether a plant is edible, poisonous, or toxic.")
+ st.write("These results are  not suitable for determining whether the plant in the image has any medicinal applications.")
+ st.write("These results are  not suitable for inferring the user's location based on which plants are visible.")
 else:
     st.write("Please upload an image to get started!")
