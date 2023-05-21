@@ -133,7 +133,6 @@ if uploaded_file is not None:
     display_results(image, class_name)
 else:
     st.write("Bitte laden Sie ein Bild hoch, um loszulegen!")
-st.write("Diese App eignet sich zur Erkennung eines gut zugeschnittenen Bildes einer Pflanze.")
 st.write("Ungeeignete Anwendungsfälle:")
 st.write("1. Diese App eignet sich nicht zur Bestimmung, ob eine Pflanze essbar, giftig oder toxisch ist.")
 st.write("2. Diese App eignet sich nicht zur Bestimmung, ob die Pflanze auf dem Bild medizinische Anwendungen hat.")
