@@ -113,7 +113,7 @@ def display_results(image, names_and_probabilities):
 
 m = load_model()
 
-uploaded_file = st.file_uploader("Bitte ein Bild hochladen oder ein Foto machen ", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("       ", type=["png", "jpg", "jpeg"])
 #uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
