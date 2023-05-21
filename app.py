@@ -19,7 +19,7 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 st.image('header.png', use_column_width=True)
 
-st.write("## Pflanzenerkennung V.0.15")
+st.write("# Pflanzen auf dem Gründach erkennen V.0.15")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
