@@ -93,12 +93,26 @@ def predict_plant(image):
     # Return the predicted class names and probabilities
     return names_and_probabilities
 
-
+'''
 def display_results(image, names_and_probabilities):
     for name, prob in names_and_probabilities:
         st.write(f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%.")
         st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
     #st.write("Uploaded image:")
+    st.image(image, width=400)
+'''    
+def display_results(image, names_and_probabilities):
+    # Read the list of "bad" plants from the file
+    with open('plants.txt', 'r') as file:
+        bad_plants = [plant.strip() for plant in file.readlines()]
+
+    for name, prob in names_and_probabilities:
+        output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
+        if name in bad_plants:
+            output += " Diese Pflanze ist eine Gefahr für das Gründach!"
+            output = f"<span style='color:red'>{output}</span>"
+        st.markdown(output, unsafe_allow_html=True)
+        st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
     st.image(image, width=400)
 
 # Load the TensorFlow Hub model
