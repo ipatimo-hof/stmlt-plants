@@ -93,13 +93,14 @@ def predict_plant(image):
     # Return the predicted class names and probabilities
     return names_and_probabilities
 
-
 def display_results(image, names_and_probabilities):
     # Read the list of "bad" plants from the file
     with open('plants.txt', 'r') as file:
-        bad_plants = [plant.strip() for plant in file.readlines()]
-        st.write(bad_plants)
+        bad_plants = [plant.strip().lower() for plant in file.read().split(',')]
+    st.write(bad_plants)
+
     for name, prob in names_and_probabilities:
+        name = name.lower()
         output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
         if name in bad_plants:
             output += " Diese Pflanze ist eine Gefahr für das Gründach!"
