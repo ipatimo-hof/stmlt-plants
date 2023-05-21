@@ -19,7 +19,7 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 st.image('header.png', use_column_width=True)
 #st.sidebar.write("## Upload image :gear:")
-st.write("## Erkennen den Pflanzen !:gear:0.14")
+st.write("## Upload image !:gear:0.14")
 @st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
@@ -47,12 +47,14 @@ def correct_image_orientation(image):
                     image = image.rotate(90, expand=True)
                    # st.write("Rotation 90")
             else:
-                st.write("No 'Orientation' tag in EXIF data")
+                ex_o=1
+                #st.write("No 'Orientation' tag in EXIF data")
         else:
-            st.write("No EXIF data found")
+            ex_o=2
+            #st.write("No EXIF data found")
             image = image.rotate(270, expand=True)
     except (AttributeError, KeyError) as e:
-        st.write(f"EXIF extraction failed with error: {str(e)}")
+        #st.write(f"EXIF extraction failed with error: {str(e)}")
         pass
     except IndexError as e:
         st.write(f"IndexError during EXIF extraction: {str(e)}")
@@ -94,8 +96,8 @@ def predict_plant(image):
 
 def display_results(image, names_and_probabilities):
     for name, prob in names_and_probabilities:
-        st.write(f"The plant in the image might be a {name} with a probability of {prob*100:.2f}%.")
-        st.markdown(f"[More about {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+        st.write(f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%.")
+        st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
     #st.write("Uploaded image:")
     st.image(image, width=400)
 
@@ -103,8 +105,8 @@ def display_results(image, names_and_probabilities):
 
 m = load_model()
 
-uploaded_file = st.file_uploader("Upload an image or make a photo", type=["png", "jpg", "jpeg"])
-#uploaded_file = st.sidebar.file_uploader("Pflanzen Erkennung", type=["png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("Bitte ein Bild hochladen oder ein Foto machen ", type=["png", "jpg", "jpeg"])
+#uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
@@ -121,8 +123,5 @@ if uploaded_file is not None:
         class_name = predict_plant(image)
 
     display_results(image, class_name)
-    st.write("These results are not suitable for determining whether a plant is edible, poisonous, or toxic.")
-    st.write("These results are  not suitable for determining whether the plant in the image has any medicinal applications.")
-    st.write("These results are  not suitable for inferring the user's location based on which plants are visible.")
 else:
-    st.write("Please upload an image to get started!")
+    st.write("Bitte laden Sie ein Bild hoch, um loszulegen!")
