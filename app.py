@@ -97,7 +97,7 @@ def display_results(image, names_and_probabilities):
     # Read the list of "bad" plants from the file
     with open('plants.txt', 'r') as file:
         bad_plants = [plant.strip().lower() for plant in file.read().split(',')]
-    st.write(bad_plants)
+    
 
     for name, prob in names_and_probabilities:
         name = name.lower()
