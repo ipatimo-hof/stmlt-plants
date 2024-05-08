@@ -68,6 +68,7 @@ def display_results(image, names_and_probabilities):
 # Function to handle camera input
 def handle_camera_input():
     camera_image = st.camera_input("Bild aufnehmen")
+    st.image(camera_image)
     if camera_image:
         image = Image.open(camera_image)
         image = correct_image_orientation(image)
