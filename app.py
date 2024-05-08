@@ -1,11 +1,9 @@
-import requests
-import io
-import pandas as pd
 import streamlit as st
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 import numpy as np
 from PIL import Image, ImageOps
+import pandas as pd
 import os
 
 # Set the working directory to the script's directory
@@ -13,9 +11,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
-
 st.image('header.png', use_column_width=True)
-
 st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 
 # Load the TensorFlow Hub model
@@ -23,35 +19,33 @@ st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
-m = load_model()
+model = load_model()
 
 def correct_image_orientation(image):
     try:
         exif = image.getexif()
-        if exif is not None:
-            orientation_key = None
-            for key, value in TAGS.items():
-                if value == 'Orientation':
-                    orientation_key = key
-                    break
-            if orientation_key and orientation_key in exif:
-                if exif[orientation_key] == 3:
-                    image = image.rotate(180, expand=True)
-                elif exif[orientation_key] == 6:
-                    image = image.rotate(270, expand=True)
-                elif exif[orientation_key] == 8:
-                    image = image.rotate(90, expand=True)
+        orientation_key = None
+        for key, value in TAGS.items():
+            if value == 'Orientation':
+                orientation_key = key
+                break
+        if orientation_key and orientation_key in exif:
+            if exif[orientation_key] == 3:
+                image = image.rotate(180, expand=True)
+            elif exif[orientation_key] == 6:
+                image = image.rotate(270, expand=True)
+            elif exif[orientation_key] == 8:
+                image = image.rotate(90, expand=True)
     except Exception as e:
         st.error(f"EXIF extraction failed with error: {str(e)}")
     return image
 
 def predict_plant(image):
-    image = image.convert('RGB')
-    image = image.resize((224, 224))
+    image = image.convert('RGB').resize((224, 224))
     image_np = np.array(image)
     image_np = np.expand_dims(image_np, axis=0)
     image_tensor = tf.convert_to_tensor(image_np, dtype=tf.float32) / 255.0
-    output = m(image_tensor)
+    output = model(image_tensor)
     top_3_predictions = tf.math.top_k(output, k=3)
     df = pd.read_csv('classifier.csv')
     categories = dict(zip(df['id'], df['name']))
@@ -68,27 +62,18 @@ def display_results(image, names_and_probabilities):
 # Function to handle camera input
 def handle_camera_input():
     camera_image = st.camera_input("Bild aufnehmen")
-    st.image(camera_image)
     if camera_image:
-        st.write("Image is captured ")
-       # image = Image.open(camera_image)
-       # image = correct_image_orientation(image)
-       # results = predict_plant(image)
-       # display_results(image, results)
+        # Process the image file from camera
+        with Image.open(camera_image) as img:
+            image = correct_image_orientation(img)
+            results = predict_plant(image)
+            display_results(image, results)
     else:
         st.write("No image captured or camera not accessible. Please try again.")
 
 # Button to activate camera input
 if st.button("Kamera verwenden"):
     handle_camera_input()
-
-
-#uploaded_file = st.file_uploader("Oder laden Sie ein Bild hoch", type=["png", "jpg", "jpeg"])
-#if uploaded_file is not None:
-#    image = Image.open(uploaded_file)
-#    image = correct_image_orientation(image)
-#    names_and_probabilities = predict_plant(image)
-#    display_results(image, names_and_probabilities)
 
 st.write("Ungeeignete Anwendungsfälle:")
 st.write("1. Diese App eignet sich nicht zur Bestimmung, ob eine Pflanze essbar, giftig oder toxisch ist.")
