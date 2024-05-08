@@ -16,7 +16,7 @@ st.set_page_config(layout="wide", page_title="Plant Recognizer")
 
 st.image('header.png', use_column_width=True)
 
-st.write("# Pflanzen auf dem Gründach erkennen V.0.15")
+st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 
 # Load the TensorFlow Hub model
 @st.cache(allow_output_mutation=True)
