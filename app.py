@@ -83,12 +83,12 @@ if st.button("Kamera verwenden"):
     handle_camera_input()
 
 
-uploaded_file = st.file_uploader("Oder laden Sie ein Bild hoch", type=["png", "jpg", "jpeg"])
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    image = correct_image_orientation(image)
-    names_and_probabilities = predict_plant(image)
-    display_results(image, names_and_probabilities)
+#uploaded_file = st.file_uploader("Oder laden Sie ein Bild hoch", type=["png", "jpg", "jpeg"])
+#if uploaded_file is not None:
+#    image = Image.open(uploaded_file)
+#    image = correct_image_orientation(image)
+#    names_and_probabilities = predict_plant(image)
+#    display_results(image, names_and_probabilities)
 
 st.write("Ungeeignete Anwendungsfälle:")
 st.write("1. Diese App eignet sich nicht zur Bestimmung, ob eine Pflanze essbar, giftig oder toxisch ist.")
