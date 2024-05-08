@@ -1,9 +1,11 @@
-import os
-import pandas as pd
 import streamlit as st
+from PIL import Image
 import tensorflow as tf
 import tensorflow_hub as hub
-from PIL import Image, ImageOps, ExifTags
+import numpy as np
+import pandas as pd
+from PIL import ImageOps
+import os
 
 # Set the working directory to the script's directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -11,7 +13,7 @@ os.chdir(script_dir)
 
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
 st.image('header.png', use_column_width=True)
-st.write("# Pflanzen auf dem Gründach erkennen V.0.15")
+st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 
 # Load the TensorFlow Hub model
 @st.cache(allow_output_mutation=True)
@@ -23,15 +25,14 @@ model = load_model()
 def correct_image_orientation(image):
     try:
         exif = image._getexif()
-        if exif is not None:
-            orientation_key = [key for key, value in ExifTags.TAGS.items() if value == 'Orientation'][0]
-            if orientation_key in exif:
-                if exif[orientation_key] == 3:
-                    image = image.rotate(180, expand=True)
-                elif exif[orientation_key] == 6:
-                    image = image.rotate(270, expand=True)
-                elif exif[orientation_key] == 8:
-                    image = image.rotate(90, expand=True)
+        orientation_key = [key for key, value in ExifTags.TAGS.items() if value == 'Orientation'][0]
+        if orientation_key and orientation_key in exif:
+            if exif[orientation_key] == 3:
+                image = image.rotate(180, expand=True)
+            elif exif[orientation_key] == 6:
+                image = image.rotate(270, expand=True)
+            elif exif[orientation_key] == 8:
+                image = image.rotate(90, expand=True)
     except Exception as e:
         st.error(f"EXIF extraction failed with error: {e}")
     return image
@@ -44,15 +45,12 @@ def predict_plant(image):
     top_3_predictions = tf.math.top_k(output, k=3)
     df = pd.read_csv('classifier.csv')
     categories = dict(zip(df['id'], df['name']))
-    return [(categories[pred], prob) for pred, prob in zip(top_3_predictions.indices.numpy()[0], tf.nn.softmax(top_3_predictions.values).numpy()[0])]
+    return [(categories[i], prob) for i, prob in zip(top_3_predictions.indices.numpy()[0], tf.nn.softmax(top_3_predictions.values).numpy()[0])]
 
 def display_results(image, names_and_probabilities):
     st.image(image, width=400)
     for name, prob in names_and_probabilities:
-        name = name.lower()
-        output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
-        st.markdown(output)
-        st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+        st.markdown(f"**{name}**: {prob * 100:.2f}% chance")
 
 # Handling camera input with session_state
 if 'captured_image' not in st.session_state:
@@ -62,6 +60,10 @@ camera_image = st.camera_input("Take a picture")
 
 if camera_image is not None:
     st.session_state['captured_image'] = camera_image
+
+uploaded_file = st.file_uploader("Or upload an image", type=["png", "jpg", "jpeg"])
+if uploaded_file is not None:
+    st.session_state['captured_image'] = uploaded_file
 
 if st.session_state['captured_image'] is not None:
     image = Image.open(st.session_state['captured_image'])
