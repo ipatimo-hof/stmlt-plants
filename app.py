@@ -1,32 +1,19 @@
-import streamlit as st
 from PIL import Image
-import os
+import numpy as np
 
-def save_image(image_file):
-    if image_file is not None:
-        # Save the image to a temporary file
-        with open("temp_image.png", "wb") as f:
-            f.write(image_file.getvalue())
-        return "temp_image.png"
-    return None
+img_file_buffer = st.camera_input("Take a picture")
 
-def load_and_display_image(image_path):
-    if image_path is not None and os.path.exists(image_path):
-        image = Image.open(image_path)
-        st.image(image, caption="Captured Image")
-        os.remove(image_path)  # Optionally, delete the file after displaying
+if img_file_buffer is not None:
+    # To read image file buffer as a PIL Image:
+    img = Image.open(img_file_buffer)
 
-def handle_camera_input():
-    camera_image = st.camera_input("Capture Image")
-    if camera_image:
-        image_path = save_image(camera_image)
-        st.session_state['image_path'] = image_path
+    # To convert PIL Image to numpy array:
+    img_array = np.array(img)
 
-if 'image_path' not in st.session_state:
-    st.session_state['image_path'] = None
+    # Check the type of img_array:
+    # Should output: <class 'numpy.ndarray'>
+    st.write(type(img_array))
 
-if st.button("Capture Image"):
-    handle_camera_input()
-
-if st.session_state['image_path']:
-    load_and_display_image(st.session_state['image_path'])
+    # Check the shape of img_array:
+    # Should output shape: (height, width, channels)
+    st.write(img_array.shape)
