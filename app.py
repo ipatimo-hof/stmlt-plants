@@ -71,12 +71,15 @@ def handle_camera_input():
     if camera_image:
         image = Image.open(camera_image)
         image = correct_image_orientation(image)
-        names_and_probabilities = predict_plant(image)
-        display_results(image, names_and_probabilities)
+        results = predict_plant(image)
+        display_results(image, results)
+    else:
+        st.write("No image captured or camera not accessible. Please try again.")
 
 # Button to activate camera input
 if st.button("Kamera verwenden"):
     handle_camera_input()
+
 
 uploaded_file = st.file_uploader("Oder laden Sie ein Bild hoch", type=["png", "jpg", "jpeg"])
 if uploaded_file is not None:
