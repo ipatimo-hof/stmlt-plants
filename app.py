@@ -1,175 +1,74 @@
-import requests
-import io
-import pandas as pd
 import streamlit as st
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 import numpy as np
-from PIL import Image
-from PIL.ExifTags import IFD
-from PIL import ImageOps,Image
-import os
+import pandas as pd
+from PIL import Image, ImageOps
 
-# Set the working directory to the script's directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
-
-st.set_page_config(layout="wide", page_title="Plant Recognizer")
-
+# Setze die Seitenkonfiguration
+st.set_page_config(layout="wide", page_title="Pflanzenerkenner")
 
 st.image('header.png', use_column_width=True)
-
 st.write("# Pflanzen auf dem Gründach erkennen V.0.15")
-@st.cache_resource
+
+# Funktion zum Laden des Modells
+@st.cache(allow_output_mutation=True)
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
-from PIL.ExifTags import TAGS
+model = load_model()
 
+# Funktion zur Korrektur der Bildausrichtung basierend auf EXIF-Daten
 def correct_image_orientation(image):
     try:
         exif = image.getexif()
-        if exif is not None:
-            orientation_key = None
-            for key, value in TAGS.items():
-                if value == 'Orientation':
-                    orientation_key = key
-                    break
-            if orientation_key and orientation_key in exif:
-              #  st.write(f"EXIF Orientation Value: {exif[orientation_key]}")
-                if exif[orientation_key] == 3:
-                    image = image.rotate(180, expand=True)
-                  #  st.write("Rotation 180")
-                elif exif[orientation_key] == 6:
-                    image = image.rotate(270, expand=True)
-                   # st.write("Rotation 270")
-                elif exif[orientation_key] == 8:
-                    image = image.rotate(90, expand=True)
-                   # st.write("Rotation 90")
-            else:
-                ex_o=1
-                #st.write("No 'Orientation' tag in EXIF data")
-        else:
-            ex_o=2
-            #st.write("No EXIF data found")
-            image = image.rotate(270, expand=True)
-    except (AttributeError, KeyError) as e:
-        #st.write(f"EXIF extraction failed with error: {str(e)}")
-        pass
-    except IndexError as e:
-        st.write(f"IndexError during EXIF extraction: {str(e)}")
-        pass
+        orientation_key = 274 # Standard-EXIF-Tag für Orientierung
+        if exif and orientation_key in exif:
+            if exif[orientation_key] == 3:
+                image = image.rotate(180, expand=True)
+            elif exif[orientation_key] == 6:
+                image = image.rotate(270, expand=True)
+            elif exif[orientation_key] == 8:
+                image = image.rotate(90, expand=True)
+    except Exception as e:
+        st.error(f"Fehler bei der Verarbeitung der EXIF-Daten: {e}")
     return image
 
+# Funktion zur Vorhersage der Pflanzenart
 def predict_plant(image):
-    # Convert the image to RGB
-    image = image.convert('RGB')
-
-    # Resize the image to the expected input size
-    image = image.resize((224, 224))
-
-    # Convert the image to a numpy array and add a batch dimension
+    image = image.convert('RGB').resize((224, 224))
     image_np = np.array(image)
-    image_np = np.expand_dims(image_np, axis=0)
-
-    # Convert the image to a float tensor and normalize it
-    image_tensor = tf.convert_to_tensor(image_np, dtype=tf.float32) / 255.0
-
-    # Pass the image to the model and get the output tensor
-    output = m(image_tensor)
-
-    # Get the top 3 predictions
-    top_3_predictions = tf.math.top_k(output, k=3)
-    predicted_classes = top_3_predictions.indices.numpy()[0]
-    predicted_probabilities = tf.nn.softmax(top_3_predictions.values).numpy()[0]
-
-    # Load the class names
+    image_np = np.expand_dims(image_np, axis=0) / 255.0
+    output = model(tf.convert_to_tensor(image_np, dtype=tf.float32))
+    top_3 = tf.math.top_k(output, k=3)
     df = pd.read_csv('classifier.csv')
     categories = dict(zip(df['id'], df['name']))
+    names_probs = [(categories[i], prob) for i, prob in zip(top_3.indices.numpy()[0], tf.nn.softmax(top_3.values).numpy()[0])]
+    return names_probs
 
-    # Get the names of the categories from the IDs and probabilities
-    names_and_probabilities = [(categories[pred], prob) for pred, prob in zip(predicted_classes, predicted_probabilities)]
-
-    # Return the predicted class names and probabilities
-    return names_and_probabilities
-
-def display_results(image, names_and_probabilities):
-    # Read the list of "bad" plants from the file
-    with open('plants.txt', 'r') as file:
-        bad_plants = [plant.strip().lower() for plant in file.read().split(',')]
-    
-
-    for name, prob in names_and_probabilities:
-        name = name.lower()
-        output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
-        if name in bad_plants:
-            output += " Diese Pflanze ist eine Gefahr für das Gründach!"
-            output = f"<span style='color:red'>{output}</span>"
-        st.markdown(output, unsafe_allow_html=True)
-        st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+# Funktion zur Anzeige der Ergebnisse
+def display_results(image, results):
     st.image(image, width=400)
+    for name, prob in results:
+        st.markdown(f"**{name}**: {prob * 100:.2f}% Wahrscheinlichkeit")
 
-# Load the TensorFlow Hub model
+# Kameraeingabe zum Erfassen eines Bildes vom Gerät
+camera_image = st.camera_input("Bild aufnehmen")
 
-m = load_model()
-# Function to capture an image from the camera
-def capture_image_from_camera():
-    cap = cv2.VideoCapture(0)  # Use the default camera
-    if not cap.isOpened():
-        st.error("Cannot open camera")
-        return None
+# Datei-Uploader zum Hochladen einer Bilddatei
+uploaded_file = st.file_uploader("Oder laden Sie eine Bilddatei hoch", type=["png", "jpg", "jpeg"])
 
-    ret, frame = cap.read()
-    cap.release()  # It's important to release the camera after capturing
-
-    if not ret:
-        st.error("Failed to capture image")
-        return None
-
-    # Convert the color space from BGR (OpenCV) to RGB (PIL)
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    return Image.fromarray(frame)
-
-# Button to capture the image from the camera
-if st.button('Capture Image from Camera'):
-    image = capture_image_from_camera()
-    if image:
-        image = correct_image_orientation(image)
-        max_size = (224, 224)
-        image.thumbnail(max_size)
-        width, height = image.size
-        delta_w = max_size[0] - width
-        delta_h = max_size[1] - height
-        padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
-        image = ImageOps.expand(image, padding)
-        with st.spinner("Analyzing the image..."):
-            class_name = predict_plant(image)
-        display_results(image, class_name)
-    else:
-        st.write("No image captured or camera not accessible.")
-
-
-
-uploaded_file = st.file_uploader("       ", type=["png", "jpg", "jpeg"])
-#uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+# Verarbeitung des Bildes von Kamera oder Upload
+if camera_image or uploaded_file:
+    image = Image.open(camera_image if camera_image else uploaded_file)
     image = correct_image_orientation(image)
-    max_size = (224, 224)
-    image.thumbnail(max_size)
-    # Pad the image to the desired size while maintaining aspect ratio
-    width, height = image.size
-    delta_w = max_size[0] - width
-    delta_h = max_size[1] - height
-    padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
-    image = ImageOps.expand(image, padding)
-    with st.spinner("Waiting for model inference..."):
-        class_name = predict_plant(image)
-
-    display_results(image, class_name)
+    results = predict_plant(image)
+    display_results(image, results)
 else:
-    st.write("Bitte laden Sie ein Bild hoch, um loszulegen!")
+    st.write("Bitte laden Sie ein Bild hoch oder nehmen Sie ein Foto auf, um die Erkennung zu starten.")
+
+st.write("Hinweis: Diese Anwendung kann nicht bestimmen, ob eine Pflanze essbar, giftig oder medizinisch verwendbar ist.")
+
 st.write("Ungeeignete Anwendungsfälle:")
 st.write("1. Diese App eignet sich nicht zur Bestimmung, ob eine Pflanze essbar, giftig oder toxisch ist.")
 st.write("2. Diese App eignet sich nicht zur Bestimmung, ob die Pflanze auf dem Bild medizinische Anwendungen hat.")
