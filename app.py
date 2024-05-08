@@ -1,20 +1,23 @@
 import streamlit as st
+from PIL import Image
 import tensorflow.compat.v2 as tf
 import tensorflow_hub as hub
 import numpy as np
-from PIL import Image, ImageOps
 import pandas as pd
+from PIL import ImageOps
 import os
 
-# Set the working directory to the script's directory
+# Setup
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
-
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
+
+if 'captured_image' not in st.session_state:
+    st.session_state['captured_image'] = None
+
 st.image('header.png', use_column_width=True)
 st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 
-# Load the TensorFlow Hub model
 @st.cache(allow_output_mutation=True)
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
@@ -24,56 +27,47 @@ model = load_model()
 def correct_image_orientation(image):
     try:
         exif = image.getexif()
-        orientation_key = None
-        for key, value in TAGS.items():
-            if value == 'Orientation':
-                orientation_key = key
-                break
-        if orientation_key and orientation_key in exif:
-            if exif[orientation_key] == 3:
+        orientation_key = 274  # Default EXIF Orientation Tag
+        if orientation_key in exif:
+            orientation = exif[orientation_key]
+            if orientation == 3:
                 image = image.rotate(180, expand=True)
-            elif exif[orientation_key] == 6:
+            elif orientation == 6:
                 image = image.rotate(270, expand=True)
-            elif exif[orientation_key] == 8:
+            elif orientation == 8:
                 image = image.rotate(90, expand=True)
     except Exception as e:
-        st.error(f"EXIF extraction failed with error: {str(e)}")
+        st.error(f"Error in processing EXIF data: {e}")
     return image
 
 def predict_plant(image):
     image = image.convert('RGB').resize((224, 224))
     image_np = np.array(image)
-    image_np = np.expand_dims(image_np, axis=0)
     image_tensor = tf.convert_to_tensor(image_np, dtype=tf.float32) / 255.0
-    output = model(image_tensor)
+    output = model(tf.expand_dims(image_tensor, 0))
     top_3_predictions = tf.math.top_k(output, k=3)
     df = pd.read_csv('classifier.csv')
     categories = dict(zip(df['id'], df['name']))
-    names_and_probabilities = [(categories[pred], prob) for pred, prob in zip(top_3_predictions.indices.numpy()[0], tf.nn.softmax(top_3_predictions.values).numpy()[0])]
-    return names_and_probabilities
+    return [(categories[i], prob) for i, prob in zip(top_3_predictions.indices.numpy()[0], tf.nn.softmax(top_3_predictions.values).numpy()[0])]
 
-def display_results(image, names_and_probabilities):
+def display_results(image, results):
     st.image(image, width=400)
-    for name, prob in names_and_probabilities:
-        name = name.lower()
-        output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
-        st.markdown(output)
+    for name, prob in results:
+        st.markdown(f"**{name}**: {prob * 100:.2f}% chance")
 
-# Function to handle camera input
 def handle_camera_input():
     camera_image = st.camera_input("Bild aufnehmen")
     if camera_image:
-        # Process the image file from camera
-        with Image.open(camera_image) as img:
-            image = correct_image_orientation(img)
-            results = predict_plant(image)
-            display_results(image, results)
-    else:
-        st.write("No image captured or camera not accessible. Please try again.")
+        st.session_state['captured_image'] = camera_image
 
-# Button to activate camera input
 if st.button("Kamera verwenden"):
     handle_camera_input()
+
+if st.session_state['captured_image'] is not None:
+    image = Image.open(st.session_state['captured_image'])
+    image = correct_image_orientation(image)
+    results = predict_plant(image)
+    display_results(image, results)
 
 st.write("Ungeeignete Anwendungsfälle:")
 st.write("1. Diese App eignet sich nicht zur Bestimmung, ob eine Pflanze essbar, giftig oder toxisch ist.")
