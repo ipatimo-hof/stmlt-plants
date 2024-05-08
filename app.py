@@ -7,7 +7,7 @@ import tensorflow_hub as hub
 import numpy as np
 from PIL import Image
 from PIL.ExifTags import IFD
-from PIL import ImageOps
+from PIL import ImageOps,Image
 import os
 
 # Set the working directory to the script's directory
@@ -112,6 +112,43 @@ def display_results(image, names_and_probabilities):
 # Load the TensorFlow Hub model
 
 m = load_model()
+# Function to capture an image from the camera
+def capture_image_from_camera():
+    cap = cv2.VideoCapture(0)  # Use the default camera
+    if not cap.isOpened():
+        st.error("Cannot open camera")
+        return None
+
+    ret, frame = cap.read()
+    cap.release()  # It's important to release the camera after capturing
+
+    if not ret:
+        st.error("Failed to capture image")
+        return None
+
+    # Convert the color space from BGR (OpenCV) to RGB (PIL)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    return Image.fromarray(frame)
+
+# Button to capture the image from the camera
+if st.button('Capture Image from Camera'):
+    image = capture_image_from_camera()
+    if image:
+        image = correct_image_orientation(image)
+        max_size = (224, 224)
+        image.thumbnail(max_size)
+        width, height = image.size
+        delta_w = max_size[0] - width
+        delta_h = max_size[1] - height
+        padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
+        image = ImageOps.expand(image, padding)
+        with st.spinner("Analyzing the image..."):
+            class_name = predict_plant(image)
+        display_results(image, class_name)
+    else:
+        st.write("No image captured or camera not accessible.")
+
+
 
 uploaded_file = st.file_uploader("       ", type=["png", "jpg", "jpeg"])
 #uploaded_file = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
