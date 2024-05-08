@@ -50,7 +50,10 @@ def predict_plant(image):
 def display_results(image, names_and_probabilities):
     st.image(image, width=400)
     for name, prob in names_and_probabilities:
-        st.markdown(f"**{name}**: {prob * 100:.2f}% chance")
+       output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
+       st.markdown(output)
+       st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+
 
 # Handling camera input with session_state
 if 'captured_image' not in st.session_state:
