@@ -3,3 +3,4 @@ requests
 Pillow
 tensorflow
 tensorflow-hub
+opencv-python
