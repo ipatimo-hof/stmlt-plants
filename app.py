@@ -70,10 +70,11 @@ def handle_camera_input():
     camera_image = st.camera_input("Bild aufnehmen")
     st.image(camera_image)
     if camera_image:
-        image = Image.open(camera_image)
-        image = correct_image_orientation(image)
-        results = predict_plant(image)
-        display_results(image, results)
+        st.write("Image is captured ")
+       # image = Image.open(camera_image)
+       # image = correct_image_orientation(image)
+       # results = predict_plant(image)
+       # display_results(image, results)
     else:
         st.write("No image captured or camera not accessible. Please try again.")
 
