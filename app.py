@@ -34,7 +34,7 @@ def correct_image_orientation(image):
             elif exif[orientation_key] == 8:
                 image = image.rotate(90, expand=True)
     except Exception as e:
-        st.error(f"EXIF extraction failed with error: {e}")
+        #st.error(f"EXIF extraction failed with error: {e}")
     return image
 
 def predict_plant(image):
