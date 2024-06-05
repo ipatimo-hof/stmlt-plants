@@ -48,12 +48,19 @@ def predict_plant(image):
     return [(categories[i], prob) for i, prob in zip(top_3_predictions.indices.numpy()[0], tf.nn.softmax(top_3_predictions.values).numpy()[0])]
 
 def display_results(image, names_and_probabilities):
-    st.image(image, width=400)
+     # Read the list of "bad" plants from the file
+    with open('plants.txt', 'r') as file:
+        bad_plants = [plant.strip().lower() for plant in file.read().split(',')]
+        
     for name, prob in names_and_probabilities:
-       output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
-       st.markdown(output)
-       st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
-
+    name = name.lower()
+    output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
+    if name in bad_plants:
+        output += " Diese Pflanze ist eine Gefahr für das Gründach!"
+        output = f"<span style='color:red'>{output}</span>"
+    st.markdown(output, unsafe_allow_html=True)
+    st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+    st.image(image, width=400)
 
 # Handling camera input with session_state
 if 'captured_image' not in st.session_state:
