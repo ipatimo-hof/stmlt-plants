@@ -54,12 +54,12 @@ def display_results(image, names_and_probabilities):
         
     for name, prob in names_and_probabilities:
     name = name.lower()
-    output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
-    if name in bad_plants:
-        output += " Diese Pflanze ist eine Gefahr für das Gründach!"
-        output = f"<span style='color:red'>{output}</span>"
-    st.markdown(output, unsafe_allow_html=True)
-    st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
+        output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
+        if name in bad_plants:
+            output += " Diese Pflanze ist eine Gefahr für das Gründach!"
+            output = f"<span style='color:red'>{output}</span>"
+        st.markdown(output, unsafe_allow_html=True)
+        st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
     st.image(image, width=400)
 
 # Handling camera input with session_state
