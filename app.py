@@ -53,7 +53,7 @@ def display_results(image, names_and_probabilities):
         bad_plants = [plant.strip().lower() for plant in file.read().split(',')]
         
     for name, prob in names_and_probabilities:
-    name = name.lower()
+        name = name.lower()
         output = f"Die Pflanze auf dem Bild ist möglicherweise eine {name} mit einer Wahrscheinlichkeit von {prob*100:.2f}%."
         if name in bad_plants:
             output += " Diese Pflanze ist eine Gefahr für das Gründach!"
