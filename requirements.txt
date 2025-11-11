@@ -3,4 +3,5 @@ requests
 Pillow
 tensorflow
 tensorflow-hub
-
+pandas
+numpy

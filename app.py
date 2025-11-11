@@ -1,10 +1,9 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageOps, ExifTags
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
 import pandas as pd
-from PIL import ImageOps
 import os
 
 # Set the working directory to the script's directory
