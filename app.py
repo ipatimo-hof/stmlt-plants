@@ -58,6 +58,8 @@ def display_results(image, names_and_probabilities):
         if name in bad_plants:
             output += " Diese Pflanze ist eine Gefahr für das Gründach!"
             output = f"<span style='color:red'>{output}</span>"
+        else:
+            output += " Diese Pflanze wurde nicht in der Liste der nicht empfohlenen Gründach-Arten gefunden."
         st.markdown(output, unsafe_allow_html=True)
         st.markdown(f"[Mehr über {name}](https://www.wikipedia.org/wiki/{name.replace(' ', '_')})")
     st.image(image, width=400)
