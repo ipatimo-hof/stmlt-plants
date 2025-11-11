@@ -11,11 +11,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
 
 st.set_page_config(layout="wide", page_title="Plant Recognizer")
-st.image('header.png', use_column_width=True)
+st.image('header.png', use_container_width=True)
 st.write("# Pflanzen auf dem Gründach erkennen V.0.16")
 
 # Load the TensorFlow Hub model
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def load_model():
     return hub.KerasLayer('https://tfhub.dev/google/aiy/vision/classifier/plants_V1/1')
 
